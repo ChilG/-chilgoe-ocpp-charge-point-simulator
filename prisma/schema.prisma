@@ -14,3 +14,131 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ChargePoint {
+  chargePointId           String            @id @unique
+  ocppProtocol            String?
+  chargePointVendor       String?
+  chargePointModel        String?
+  chargePointSerialNumber String?
+  chargeBoxSerialNumber   String?
+  firmwareVersion         String?
+  iccid                   String?
+  imsi                    String?
+  meterType               String?
+  meterSerialNumber       String?
+  description             String?
+  note                    String?
+  createdAt               DateTime          @default(now())
+  Connector               Connector[]
+  Configuration           Configuration[]
+  OcppTag                 OcppTag[]
+  Transaction             Transaction[]
+  Reservation             Reservation[]
+  ChargingProfile         ChargingProfile[]
+
+  @@index([ocppProtocol])
+}
+
+model Connector {
+  connectorId     Int
+  chargePointId   String
+  status          String?
+  statusTimestamp DateTime?
+  errorCode       String?
+  errorInfo       String?
+  vendorId        String?
+  vendorErrorCode String?
+  createdAt       DateTime          @default(now())
+  ChargePoint     ChargePoint       @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+  Transaction     Transaction[]
+  Reservation     Reservation[]
+  ChargingProfile ChargingProfile[]
+
+  @@id([chargePointId, connectorId])
+}
+
+model Configuration {
+  key           String
+  chargePointId String
+  readonly      Boolean     @default(true)
+  value         String
+  type          String
+  unit          String
+  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime    @default(now())
+  ChargePoint   ChargePoint @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([chargePointId, key])
+}
+
+model OcppTag {
+  idTag         String
+  chargePointId String
+  parentIdTag   String?
+  expiryDate    DateTime?
+  status        String
+  type          String
+  ChargePoint   ChargePoint   @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+  Transaction   Transaction[]
+  Reservation   Reservation[]
+
+  @@id([chargePointId, idTag])
+}
+
+model Transaction {
+  transactionId  Int
+  chargePointId  String
+  connectorId    Int
+  idTag          String
+  startTimestamp DateTime?
+  meterStart     Int?
+  stopTimestamp  DateTime?
+  meterStop      Int?
+  stopReason     String?
+  createdAt      DateTime      @default(now())
+  ChargePoint    ChargePoint   @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+  Connector      Connector     @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
+  OcppTag        OcppTag       @relation(fields: [chargePointId, idTag], references: [chargePointId, idTag], onDelete: Cascade, onUpdate: NoAction)
+  Reservation    Reservation[]
+
+  @@id([chargePointId, transactionId])
+}
+
+model Reservation {
+  reservationId  Int
+  chargePointId  String
+  connectorId    Int
+  idTag          String
+  transactionId  Int?         @unique
+  expiryDatetime DateTime
+  status         String?
+  createdAt      DateTime     @default(now())
+  ChargePoint    ChargePoint  @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+  Transaction    Transaction? @relation(fields: [chargePointId, transactionId], references: [chargePointId, transactionId], onDelete: NoAction, onUpdate: NoAction)
+  Connector      Connector    @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
+  OcppTag        OcppTag      @relation(fields: [chargePointId, idTag], references: [chargePointId, idTag], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([chargePointId, reservationId])
+}
+
+model ChargingProfile {
+  chargingProfileId      Int
+  chargePointId          String
+  connectorId            Int
+  stackLevel             Int
+  chargingProfilePurpose String
+  chargingProfileKind    String
+  recurrencyKind         String?
+  validFrom              DateTime?
+  validTo                DateTime?
+  duration               Int?
+  startSchedule          DateTime?
+  chargingRateUnit       String
+  minChargingRate        Decimal?    @default(0.0)
+  chargingSchedulePeriod String
+  createdAt              DateTime    @default(now())
+  ChargePoint            ChargePoint @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+  Connector              Connector   @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([chargePointId, chargingProfileId, connectorId])
+}

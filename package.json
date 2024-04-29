@@ -21,8 +21,8 @@
     "electron-serve": "^1.3.0",
     "electron-store": "^8.2.0",
     "express": "^4.19.2",
-    "prisma": "^5.12.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zod-ocpp": "^1.0.10"
   },
   "devDependencies": {
     "@emotion/cache": "^11.11.0",
@@ -36,7 +36,7 @@
     "@mui/material": "^5.15.15",
     "@mui/material-nextjs": "^5.15.11",
     "@mui/x-data-grid": "^7.3.0",
-    "@prisma/client": "^5.12.1",
+    "@prisma/client": "^5.13.0",
     "@tanstack/react-query": "^4.36.1",
     "@trpc/client": "^10.45.2",
     "@trpc/react-query": "^10.45.2",
@@ -51,6 +51,7 @@
     "next": "^13.5.6",
     "nextron": "^8.15.0",
     "prettier": "^3.2.5",
+    "prisma": "^5.13.0",
     "prisma-dbml-generator": "^0.12.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
