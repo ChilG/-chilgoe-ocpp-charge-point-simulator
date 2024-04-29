@@ -1,0 +1,54 @@
+appId: com.chilgoe.ocpp-charge-point-simulator
+productName: OCPP Charge Point Simulator
+copyright: Copyright © 2024 ChilGoe
+
+directories:
+  output: dist
+  buildResources: resources
+
+files:
+  - from: .
+    filter:
+      - package.json
+      - app
+      - prisma/**/*
+      - 'localization/!(locales)'
+      - '!prisma/generated'
+      - '!prisma/dbml'
+      - '!prisma/dev.db'
+      - '!prisma/dev.db-journal'
+      - '!**/node_modules/@prisma/engines/introspection-engine*'
+      - '!**/node_modules/@prisma/engines/migration-engine*'
+      - '!**/node_modules/@prisma/engines/prisma-fmt*'
+      - '!**/node_modules/@prisma/engines/query_engine-*'
+      - '!**/node_modules/@prisma/engines/libquery_engine*'
+      - '!**/node_modules/@prisma/engines/schema-engine*'
+      - '!**/node_modules/prisma/query_engine*'
+      - '!**/node_modules/prisma/libquery_engine*'
+      - '!**/node_modules/prisma/schema-engine*'
+      - '!**/node_modules/prisma/**/*.mjs'
+
+extraFiles:
+  - localization/locales/**/*
+
+extraResources:
+  - node_modules/@prisma/engines/migration-engine*
+  - node_modules/@prisma/engines/query*
+  - node_modules/@prisma/engines/libquery*
+  - node_modules/@prisma/engines/schema-engine*
+  - THIRD-PARTY-LICENSES.txt
+
+mac:
+  asarUnpack:
+    - prisma
+
+publish: null
+
+win:
+  target:
+    - nsis
+  asar:
+    smartUnpack: false
+  asarUnpack:
+    - prisma
+  artifactName: ${productName}-Setup-${version}.${ext}
