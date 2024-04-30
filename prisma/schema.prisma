@@ -15,7 +15,7 @@ datasource db {
 }
 
 model ChargePoint {
-  chargePointId           String            @id @unique
+  chargePointId           String            @id
   ocppProtocol            String?
   chargePointVendor       String?
   chargePointModel        String?
@@ -28,36 +28,41 @@ model ChargePoint {
   meterSerialNumber       String?
   description             String?
   note                    String?
+  endPoint                String?
+  updatedAt               DateTime          @updatedAt
   createdAt               DateTime          @default(now())
-  Connector               Connector[]
-  Configuration           Configuration[]
-  OcppTag                 OcppTag[]
-  Transaction             Transaction[]
-  Reservation             Reservation[]
   ChargingProfile         ChargingProfile[]
+  Configuration           Configuration[]
+  Connector               Connector[]
+  Log                     Log[]
+  OcppTag                 OcppTag[]
+  Reservation             Reservation[]
+  Transaction             Transaction[]
 
   @@index([ocppProtocol])
 }
 
 model Connector {
+  id              Int               @id @default(autoincrement())
   connectorId     Int
   chargePointId   String
   status          String?
-  statusTimestamp DateTime?
   errorCode       String?
   errorInfo       String?
   vendorId        String?
   vendorErrorCode String?
+  updatedAt       DateTime          @updatedAt
   createdAt       DateTime          @default(now())
-  ChargePoint     ChargePoint       @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
-  Transaction     Transaction[]
-  Reservation     Reservation[]
   ChargingProfile ChargingProfile[]
+  ChargePoint     ChargePoint       @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+  Reservation     Reservation[]
+  Transaction     Transaction[]
 
-  @@id([chargePointId, connectorId])
+  @@unique([chargePointId, connectorId])
 }
 
 model Configuration {
+  id            Int         @id @default(autoincrement())
   key           String
   chargePointId String
   readonly      Boolean     @default(true)
@@ -68,60 +73,68 @@ model Configuration {
   createdAt     DateTime    @default(now())
   ChargePoint   ChargePoint @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
 
-  @@id([chargePointId, key])
+  @@unique([chargePointId, key])
 }
 
 model OcppTag {
+  id            Int           @id @default(autoincrement())
   idTag         String
   chargePointId String
   parentIdTag   String?
   expiryDate    DateTime?
   status        String
   type          String
+  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime      @default(now())
   ChargePoint   ChargePoint   @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
-  Transaction   Transaction[]
   Reservation   Reservation[]
+  Transaction   Transaction[]
 
-  @@id([chargePointId, idTag])
+  @@unique([chargePointId, idTag])
 }
 
 model Transaction {
+  id             Int          @id @default(autoincrement())
   transactionId  Int
   chargePointId  String
   connectorId    Int
+  reservation    Int?         @unique
   idTag          String
   startTimestamp DateTime?
   meterStart     Int?
   stopTimestamp  DateTime?
   meterStop      Int?
   stopReason     String?
-  createdAt      DateTime      @default(now())
-  ChargePoint    ChargePoint   @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
-  Connector      Connector     @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
-  OcppTag        OcppTag       @relation(fields: [chargePointId, idTag], references: [chargePointId, idTag], onDelete: Cascade, onUpdate: NoAction)
-  Reservation    Reservation[]
+  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime     @default(now())
+  Reservation    Reservation? @relation(fields: [reservation], references: [id])
+  OcppTag        OcppTag      @relation(fields: [chargePointId, idTag], references: [chargePointId, idTag], onDelete: Cascade, onUpdate: NoAction)
+  Connector      Connector    @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
+  ChargePoint    ChargePoint  @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
 
-  @@id([chargePointId, transactionId])
+  @@unique([chargePointId, transactionId])
 }
 
 model Reservation {
+  id             Int          @id @default(autoincrement())
   reservationId  Int
-  chargePointId  String
   connectorId    Int
+  chargePointId  String
   idTag          String
-  transactionId  Int?         @unique
   expiryDatetime DateTime
   status         String?
+  updatedAt      DateTime     @updatedAt
   createdAt      DateTime     @default(now())
-  ChargePoint    ChargePoint  @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
-  Transaction    Transaction? @relation(fields: [chargePointId, transactionId], references: [chargePointId, transactionId], onDelete: NoAction, onUpdate: NoAction)
-  Connector      Connector    @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
+  ChargePoint    ChargePoint  @relation(fields: [chargePointId], references: [chargePointId])
   OcppTag        OcppTag      @relation(fields: [chargePointId, idTag], references: [chargePointId, idTag], onDelete: Cascade, onUpdate: NoAction)
+  Connector      Connector    @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
+  Transaction    Transaction?
 
-  @@id([chargePointId, reservationId])
+  @@unique([reservationId, connectorId, chargePointId])
 }
 
 model ChargingProfile {
+  id                     Int         @id @default(autoincrement())
   chargingProfileId      Int
   chargePointId          String
   connectorId            Int
@@ -136,9 +149,34 @@ model ChargingProfile {
   chargingRateUnit       String
   minChargingRate        Decimal?    @default(0.0)
   chargingSchedulePeriod String
+  updatedAt              DateTime    @updatedAt
   createdAt              DateTime    @default(now())
-  ChargePoint            ChargePoint @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
   Connector              Connector   @relation(fields: [chargePointId, connectorId], references: [chargePointId, connectorId], onDelete: Cascade, onUpdate: NoAction)
+  ChargePoint            ChargePoint @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
 
-  @@id([chargePointId, chargingProfileId, connectorId])
+  @@unique([chargePointId, chargingProfileId, connectorId])
+}
+
+model Log {
+  id                Int         @id @default(autoincrement())
+  uniqueId          String
+  chargePointId     String
+  action            String?
+  request           String?
+  response          String?
+  errorCode         String?
+  errorDescription  String?
+  errorDetails      String?
+  requestTimestamp  DateTime?
+  responseTimestamp DateTime?
+  errorTimestamp    DateTime?
+  updatedAt         DateTime    @updatedAt
+  createdAt         DateTime    @default(now())
+  ChargePoint       ChargePoint @relation(fields: [chargePointId], references: [chargePointId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([uniqueId, chargePointId])
+  @@index([action])
+  @@index([requestTimestamp])
+  @@index([responseTimestamp])
+  @@index([errorTimestamp])
 }

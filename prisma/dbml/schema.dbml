@@ -16,36 +16,41 @@ Table ChargePoint {
   meterSerialNumber String
   description String
   note String
+  endPoint String
+  updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
-  Connector Connector [not null]
-  Configuration Configuration [not null]
-  OcppTag OcppTag [not null]
-  Transaction Transaction [not null]
-  Reservation Reservation [not null]
   ChargingProfile ChargingProfile [not null]
+  Configuration Configuration [not null]
+  Connector Connector [not null]
+  OcppTag OcppTag [not null]
+  Reservation Reservation [not null]
+  Transaction Transaction [not null]
+  Log Log [not null]
 }
 
 Table Connector {
+  id Int [pk, increment]
   connectorId Int [not null]
   chargePointId String [not null]
   status String
-  statusTimestamp DateTime
   errorCode String
   errorInfo String
   vendorId String
   vendorErrorCode String
+  updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
   ChargePoint ChargePoint [not null]
-  Transaction Transaction [not null]
-  Reservation Reservation [not null]
   ChargingProfile ChargingProfile [not null]
+  Reservation Reservation [not null]
+  Transaction Transaction [not null]
 
   indexes {
-    (chargePointId, connectorId) [pk]
+    (chargePointId, connectorId) [unique]
   }
 }
 
 Table Configuration {
+  id Int [pk, increment]
   key String [not null]
   chargePointId String [not null]
   readonly Boolean [not null, default: true]
@@ -57,67 +62,75 @@ Table Configuration {
   ChargePoint ChargePoint [not null]
 
   indexes {
-    (chargePointId, key) [pk]
+    (chargePointId, key) [unique]
   }
 }
 
 Table OcppTag {
+  id Int [pk, increment]
   idTag String [not null]
   chargePointId String [not null]
   parentIdTag String
   expiryDate DateTime
   status String [not null]
   type String [not null]
+  updatedAt DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
   ChargePoint ChargePoint [not null]
-  Transaction Transaction [not null]
   Reservation Reservation [not null]
+  Transaction Transaction [not null]
 
   indexes {
-    (chargePointId, idTag) [pk]
+    (chargePointId, idTag) [unique]
   }
 }
 
 Table Transaction {
+  id Int [pk, increment]
   transactionId Int [not null]
   chargePointId String [not null]
   connectorId Int [not null]
+  reservation Int [unique]
   idTag String [not null]
   startTimestamp DateTime
   meterStart Int
   stopTimestamp DateTime
   meterStop Int
   stopReason String
+  updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
   ChargePoint ChargePoint [not null]
   Connector Connector [not null]
   OcppTag OcppTag [not null]
-  Reservation Reservation [not null]
+  Reservation Reservation
 
   indexes {
-    (chargePointId, transactionId) [pk]
+    (chargePointId, transactionId) [unique]
   }
 }
 
 Table Reservation {
+  id Int [pk, increment]
   reservationId Int [not null]
-  chargePointId String [not null]
   connectorId Int [not null]
+  chargePointId String [not null]
   idTag String [not null]
-  transactionId Int [unique]
   expiryDatetime DateTime [not null]
   status String
+  updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
-  ChargePoint ChargePoint [not null]
-  Transaction Transaction
   Connector Connector [not null]
   OcppTag OcppTag [not null]
+  ChargePoint ChargePoint [not null]
+  Transaction Transaction
 
   indexes {
-    (chargePointId, reservationId) [pk]
+    (reservationId, connectorId, chargePointId) [unique]
   }
 }
 
 Table ChargingProfile {
+  id Int [pk, increment]
   chargingProfileId Int [not null]
   chargePointId String [not null]
   connectorId Int [not null]
@@ -132,12 +145,35 @@ Table ChargingProfile {
   chargingRateUnit String [not null]
   minChargingRate Decimal [default: 0]
   chargingSchedulePeriod String [not null]
+  updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
   ChargePoint ChargePoint [not null]
   Connector Connector [not null]
 
   indexes {
-    (chargePointId, chargingProfileId, connectorId) [pk]
+    (chargePointId, chargingProfileId, connectorId) [unique]
+  }
+}
+
+Table Log {
+  id Int [pk, increment]
+  uniqueId String [not null]
+  chargePointId String [not null]
+  action String
+  request String
+  response String
+  errorCode String
+  errorDescription String
+  errorDetails String
+  requestTimestamp DateTime
+  responseTimestamp DateTime
+  errorTimestamp DateTime
+  updatedAt DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
+  ChargePoint ChargePoint [not null]
+
+  indexes {
+    (uniqueId, chargePointId) [unique]
   }
 }
 
@@ -153,14 +189,16 @@ Ref: Transaction.(chargePointId, connectorId) > Connector.(chargePointId, connec
 
 Ref: Transaction.(chargePointId, idTag) > OcppTag.(chargePointId, idTag) [delete: Cascade]
 
-Ref: Reservation.chargePointId > ChargePoint.chargePointId [delete: Cascade]
-
-Ref: Reservation.(chargePointId, transactionId) > Transaction.(chargePointId, transactionId) [delete: No Action]
+Ref: Transaction.reservation - Reservation.id
 
 Ref: Reservation.(chargePointId, connectorId) > Connector.(chargePointId, connectorId) [delete: Cascade]
 
 Ref: Reservation.(chargePointId, idTag) > OcppTag.(chargePointId, idTag) [delete: Cascade]
 
+Ref: Reservation.chargePointId > ChargePoint.chargePointId
+
 Ref: ChargingProfile.chargePointId > ChargePoint.chargePointId [delete: Cascade]
 
 Ref: ChargingProfile.(chargePointId, connectorId) > Connector.(chargePointId, connectorId) [delete: Cascade]
+
+Ref: Log.chargePointId > ChargePoint.chargePointId [delete: Cascade]
