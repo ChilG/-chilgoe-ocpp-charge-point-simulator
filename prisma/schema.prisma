@@ -31,6 +31,7 @@ model ChargePoint {
   endPoint                String?
   updatedAt               DateTime          @updatedAt
   createdAt               DateTime          @default(now())
+  simulationStatus        String            @default("Stop")
   ChargingProfile         ChargingProfile[]
   Configuration           Configuration[]
   Connector               Connector[]

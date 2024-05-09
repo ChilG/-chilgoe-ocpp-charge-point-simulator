@@ -1,11 +1,7 @@
 import React from 'react';
+import { Breakpoint, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContentText from '@mui/material/DialogContentText';
 
 interface DialogAlertActionProps {
   loading?: boolean;
@@ -16,6 +12,7 @@ interface DialogAlertActionProps {
   description?: string;
   cancelText?: string;
   submitText?: string;
+  maxWidth?: Breakpoint;
 }
 
 const DialogAlertAction: React.FC<DialogAlertActionProps> = ({
@@ -27,26 +24,25 @@ const DialogAlertAction: React.FC<DialogAlertActionProps> = ({
   description,
   cancelText,
   submitText,
+  maxWidth = 'sm',
 }) => {
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth={maxWidth}
       fullWidth
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
     >
       <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
-      <DialogContent>
-        {description && <DialogContentText id="alert-dialog-description">{description}</DialogContentText>}
-      </DialogContent>
+      <DialogContent>{description && <DialogContentText id="alert-dialog-description">{description}</DialogContentText>}</DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          {cancelText ?? 'Cancel'}
+          {cancelText ?? 'Close'}
         </Button>
         <LoadingButton loading={loading} onClick={onSubmit}>
-          {submitText ?? 'Submit'}
+          {submitText ?? 'OK'}
         </LoadingButton>
       </DialogActions>
     </Dialog>

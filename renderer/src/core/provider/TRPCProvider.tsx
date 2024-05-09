@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { api } from '../../utils/api';
+import { api, getBaseApiUrl, wsClient } from '../../utils/api';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { httpBatchLink, loggerLink } from '@trpc/client';
+import { httpLink, loggerLink, splitLink, wsLink } from '@trpc/client';
 
 interface TrpcProviderProps {
   children: React.ReactNode;
@@ -20,13 +20,16 @@ const TrpcProvider: React.FC<TrpcProviderProps> = ({ children }) => {
             );
           },
         }),
-        httpBatchLink({
-          url: `http://127.0.0.1:9988/api/trpc`,
-          async headers() {
-            let headers: any = {};
-
-            return headers;
+        splitLink({
+          condition(op) {
+            return op.type === 'subscription';
           },
+          true: wsLink({
+            client: wsClient,
+          }),
+          false: httpLink({
+            url: `${getBaseApiUrl()}/api/trpc`,
+          }),
         }),
       ],
     });

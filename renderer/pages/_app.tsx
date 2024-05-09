@@ -9,6 +9,7 @@ import TRPCProvider from '../src/core/provider/TRPCProvider';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
+import AppLayout from '../src/core/AppLayout';
 
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
@@ -23,7 +24,9 @@ export default function MyApp(props: AppProps) {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <TRPCProvider>
-          <Component {...pageProps} />
+          <AppLayout>
+            <Component {...pageProps} />
+          </AppLayout>
         </TRPCProvider>
       </ThemeProvider>
     </AppCacheProvider>

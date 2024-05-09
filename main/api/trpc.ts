@@ -2,8 +2,9 @@ import { inferAsyncReturnType, initTRPC } from '@trpc/server';
 import { type CreateHTTPContextOptions } from '@trpc/server/adapters/standalone';
 import { ZodError } from 'zod';
 import { prisma } from '../prisma';
+import { CreateWSSContextFnOptions } from '@trpc/server/dist/adapters/ws';
 
-export const createTRPCContext = async (_opts: CreateHTTPContextOptions) => {
+export const createTRPCContext = async (_opts: CreateHTTPContextOptions | CreateWSSContextFnOptions) => {
   return { prisma };
 };
 

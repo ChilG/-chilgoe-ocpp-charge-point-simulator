@@ -2,13 +2,15 @@ import path from 'path';
 import { app, ipcMain } from 'electron';
 import serve from 'electron-serve';
 import { createServer, createWindow } from './helpers';
-import * as trpcExpress from '@trpc/server/adapters/express';
 import http from 'http';
-import { appRouter } from './api/root';
+import { AppRouter, appRouter } from './api/root';
 import { createTRPCContext } from './api/trpc';
 import { error, info } from './logger';
 import { dbUrl, schemaPath } from './constants';
 import { checkNeedsMigrate, runPrismaCommand } from './prisma';
+import * as trpcExpress from '@trpc/server/adapters/express';
+import * as trpcWss from '@trpc/server/adapters/ws';
+import { WebSocketServer } from 'ws';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -19,6 +21,8 @@ if (isProd) {
 }
 
 let trpcServer: http.Server;
+let wssServer: any;
+let handler: any;
 
 const startTRPCServer = async () => {
   if (trpcServer) trpcServer.close();
@@ -35,18 +39,33 @@ const startTRPCServer = async () => {
   trpcServer = app.listen(9988, '127.0.0.1', () => {
     info('TRPC Server Running On http://127.0.0.1:9988/api/trpc');
   });
+
+  wssServer = new WebSocketServer({ server: trpcServer, path: '/ws/trpc' });
+
+  handler = trpcWss.applyWSSHandler<AppRouter>({ wss: wssServer, router: appRouter, createContext: createTRPCContext });
+
+  wssServer.on('connection', (ws) => {
+    !isProd && info(`➕➕ Connection (${wssServer.clients.size})`);
+    ws.once('close', () => {
+      !isProd && info(`➖➖ Connection (${wssServer.clients.size})`);
+    });
+  });
 };
 
 (async () => {
   await app.whenReady();
 
   const mainWindow = createWindow('main', {
-    width: 1000,
+    width: 1200,
     height: 600,
-
+    minWidth: 1000,
+    minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
     },
+    frame: false, // Remove window frame
+    titleBarStyle: 'hiddenInset', // Hide title bar on macOS
   });
 
   if (isProd) {
@@ -85,6 +104,8 @@ app.on('ready', async () => {
 
 app.on('window-all-closed', () => {
   trpcServer.close();
+  handler.broadcastReconnectNotification();
+  wssServer.close();
   app.quit();
 });
 

@@ -19,13 +19,14 @@ Table ChargePoint {
   endPoint String
   updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
+  simulationStatus String [not null, default: 'Stop']
   ChargingProfile ChargingProfile [not null]
   Configuration Configuration [not null]
   Connector Connector [not null]
+  Log Log [not null]
   OcppTag OcppTag [not null]
   Reservation Reservation [not null]
   Transaction Transaction [not null]
-  Log Log [not null]
 }
 
 Table Connector {
@@ -39,8 +40,8 @@ Table Connector {
   vendorErrorCode String
   updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
-  ChargePoint ChargePoint [not null]
   ChargingProfile ChargingProfile [not null]
+  ChargePoint ChargePoint [not null]
   Reservation Reservation [not null]
   Transaction Transaction [not null]
 
@@ -99,10 +100,10 @@ Table Transaction {
   stopReason String
   updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
-  ChargePoint ChargePoint [not null]
-  Connector Connector [not null]
-  OcppTag OcppTag [not null]
   Reservation Reservation
+  OcppTag OcppTag [not null]
+  Connector Connector [not null]
+  ChargePoint ChargePoint [not null]
 
   indexes {
     (chargePointId, transactionId) [unique]
@@ -119,9 +120,9 @@ Table Reservation {
   status String
   updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
-  Connector Connector [not null]
-  OcppTag OcppTag [not null]
   ChargePoint ChargePoint [not null]
+  OcppTag OcppTag [not null]
+  Connector Connector [not null]
   Transaction Transaction
 
   indexes {
@@ -147,8 +148,8 @@ Table ChargingProfile {
   chargingSchedulePeriod String [not null]
   updatedAt DateTime [not null]
   createdAt DateTime [default: `now()`, not null]
-  ChargePoint ChargePoint [not null]
   Connector Connector [not null]
+  ChargePoint ChargePoint [not null]
 
   indexes {
     (chargePointId, chargingProfileId, connectorId) [unique]
@@ -183,22 +184,22 @@ Ref: Configuration.chargePointId > ChargePoint.chargePointId [delete: Cascade]
 
 Ref: OcppTag.chargePointId > ChargePoint.chargePointId [delete: Cascade]
 
-Ref: Transaction.chargePointId > ChargePoint.chargePointId [delete: Cascade]
-
-Ref: Transaction.(chargePointId, connectorId) > Connector.(chargePointId, connectorId) [delete: Cascade]
+Ref: Transaction.reservation - Reservation.id
 
 Ref: Transaction.(chargePointId, idTag) > OcppTag.(chargePointId, idTag) [delete: Cascade]
 
-Ref: Transaction.reservation - Reservation.id
+Ref: Transaction.(chargePointId, connectorId) > Connector.(chargePointId, connectorId) [delete: Cascade]
 
-Ref: Reservation.(chargePointId, connectorId) > Connector.(chargePointId, connectorId) [delete: Cascade]
-
-Ref: Reservation.(chargePointId, idTag) > OcppTag.(chargePointId, idTag) [delete: Cascade]
+Ref: Transaction.chargePointId > ChargePoint.chargePointId [delete: Cascade]
 
 Ref: Reservation.chargePointId > ChargePoint.chargePointId
 
-Ref: ChargingProfile.chargePointId > ChargePoint.chargePointId [delete: Cascade]
+Ref: Reservation.(chargePointId, idTag) > OcppTag.(chargePointId, idTag) [delete: Cascade]
+
+Ref: Reservation.(chargePointId, connectorId) > Connector.(chargePointId, connectorId) [delete: Cascade]
 
 Ref: ChargingProfile.(chargePointId, connectorId) > Connector.(chargePointId, connectorId) [delete: Cascade]
+
+Ref: ChargingProfile.chargePointId > ChargePoint.chargePointId [delete: Cascade]
 
 Ref: Log.chargePointId > ChargePoint.chargePointId [delete: Cascade]

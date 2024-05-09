@@ -2,14 +2,14 @@ import React from 'react';
 import AppPageTitle from '../src/core/AppPageTitle';
 import Container from '@mui/material/Container';
 
-interface HomeProps {}
+interface CentralSystemProps {}
 
-const Home: React.FC<HomeProps> = (props) => {
+const CentralSystem: React.FC<CentralSystemProps> = (props) => {
   return (
     <Container maxWidth="xl">
-      <AppPageTitle title="Home" />
+      <AppPageTitle title="Debug" />
     </Container>
   );
 };
 
-export default Home;
+export default CentralSystem;

@@ -37,7 +37,7 @@ export const sePath = path.join(extraResourcesPath, platformToExecutables[platfo
 export const prismaPath = path.join(app.getAppPath(), 'node_modules/prisma/build/index.js');
 export const schemaPath = path.join(unpackResourcesPath, 'prisma', 'schema.prisma');
 
-export const latestMigration = '20240429102705_update_database';
+export const latestMigration = '20240509043934_update_database';
 
 export interface Migration {
   id: string;

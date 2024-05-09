@@ -1,4 +1,4 @@
-export interface Dialog {
+export interface DefaultDialogState {
   open: boolean;
   target: string | number;
 }
