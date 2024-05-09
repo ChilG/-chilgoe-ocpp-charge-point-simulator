@@ -8,8 +8,8 @@ import { createTRPCContext } from './api/trpc';
 import { error, info } from './logger';
 import { dbUrl, schemaPath } from './constants';
 import { checkNeedsMigrate, runPrismaCommand } from './prisma';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import * as trpcWss from '@trpc/server/adapters/ws';
+import * as trpcAdaptorExpress from '@trpc/server/adapters/express';
+import * as trpcAdaptorWss from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -21,15 +21,15 @@ if (isProd) {
 }
 
 let trpcServer: http.Server;
-let wssServer: any;
-let handler: any;
+let wssServer: WebSocketServer;
+let handler: ReturnType<typeof trpcAdaptorWss.applyWSSHandler<AppRouter>>;
 
 const startTRPCServer = async () => {
   if (trpcServer) trpcServer.close();
 
   const app = createServer();
 
-  const middleware = trpcExpress.createExpressMiddleware({
+  const middleware = trpcAdaptorExpress.createExpressMiddleware({
     router: appRouter,
     createContext: createTRPCContext,
   });
@@ -42,7 +42,11 @@ const startTRPCServer = async () => {
 
   wssServer = new WebSocketServer({ server: trpcServer, path: '/ws/trpc' });
 
-  handler = trpcWss.applyWSSHandler<AppRouter>({ wss: wssServer, router: appRouter, createContext: createTRPCContext });
+  handler = trpcAdaptorWss.applyWSSHandler<AppRouter>({
+    wss: wssServer,
+    router: appRouter,
+    createContext: createTRPCContext,
+  });
 
   wssServer.on('connection', (ws) => {
     !isProd && info(`➕➕ Connection (${wssServer.clients.size})`);
